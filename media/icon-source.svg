@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#243244"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="db" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="run" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App background -->
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="url(#bg)"/>
+  <rect x="2.5" y="2.5" width="123" height="123" rx="25.5" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+
+  <!-- Mapper file -->
+  <g>
+    <path d="M17,30 H42 L54,42 V87 a5,5 0 0 1 -5,5 H17 a5,5 0 0 1 -5,-5 V35 a5,5 0 0 1 5,-5 Z" fill="#f1f5f9"/>
+    <path d="M42,30 L54,42 H47 a5,5 0 0 1 -5,-5 Z" fill="#cbd5e1"/>
+    <rect x="18" y="45" width="20" height="4" rx="2" fill="#3b82f6"/>
+    <rect x="18" y="53" width="26" height="3.5" rx="1.75" fill="#94a3b8"/>
+    <text x="33" y="74" text-anchor="middle"
+          font-family="Segoe UI, Arial, sans-serif" font-size="8" font-weight="700"
+          fill="#0f172a">Mapper</text>
+  </g>
+
+  <!-- "SQL" label above the execute arrow -->
+  <text x="69" y="50" text-anchor="middle"
+        font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="800"
+        fill="#34d399" letter-spacing="0.5">SQL</text>
+
+  <!-- Execute arrow -->
+  <path d="M57,62 H73 V56 L83,66 L73,76 V70 H57 Z" fill="url(#run)"/>
+
+  <!-- Database -->
+  <g>
+    <path d="M84,50 V80 A15,5.5 0 0 0 114,80 V50 Z" fill="url(#db)"/>
+    <ellipse cx="99" cy="50" rx="15" ry="5.5" fill="#93c5fd"/>
+    <path d="M84,61 A15,5.5 0 0 0 114,61" fill="none" stroke="#1d4ed8" stroke-opacity="0.5" stroke-width="1.8"/>
+    <path d="M84,71 A15,5.5 0 0 0 114,71" fill="none" stroke="#1d4ed8" stroke-opacity="0.5" stroke-width="1.8"/>
+    <path d="M84,50 V80 A15,5.5 0 0 0 114,80 V50" fill="none" stroke="#1e3a8a" stroke-opacity="0.55" stroke-width="1.5"/>
+    <ellipse cx="99" cy="50" rx="15" ry="5.5" fill="none" stroke="#1e3a8a" stroke-opacity="0.55" stroke-width="1.5"/>
+  </g>
+</svg>

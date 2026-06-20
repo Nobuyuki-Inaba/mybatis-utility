@@ -2,6 +2,7 @@
 docs/
 
 # Development tooling
+media/icon-source.svg
 .vscode/**
 .vscode-test/**
 .claude/**

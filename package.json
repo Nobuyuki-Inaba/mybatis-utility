@@ -1,8 +1,8 @@
 {
   "name": "mybatis-utility",
-  "displayName": "MyBatis Utility",
+  "displayName": "MyBatis Mapper Executor",
   "description": "MyBatis query executor — browse Mapper files, fill placeholders, run queries against configured databases",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "publisher": "nobuyuki-inaba",
   "license": "MIT",
   "repository": {
@@ -331,6 +331,7 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.11.0",

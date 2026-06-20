@@ -2,7 +2,9 @@
 
 ## Project overview
 
-VSCode extension (`mybatis-utility`, publisher `nobuyuki-inaba`) that lets MyBatis developers browse Mapper files and run SQL queries against configured databases from inside VSCode.
+VSCode extension (`mybatis-utility`, display name **"MyBatis Mapper Executor"**, publisher `nobuyuki-inaba`) that lets MyBatis developers browse Mapper files and run SQL queries against configured databases from inside VSCode.
+
+> The package `name` (`mybatis-utility`) is the permanent Marketplace identifier (`publisher.name`) — never change it or existing users get orphaned onto a separate listing. The user-facing name is `displayName`, which is freely changeable. Internal IDs (`mybatisUtility.*` commands/views/settings, the activity-bar container title) intentionally still read "MyBatis Utility".
 
 ## Build commands
 
@@ -221,5 +223,6 @@ npx vsce publish
 ### Pre-release checklist
 
 - **Animated demo**: the README embeds `docs/howtouse.gif`. Update this GIF when the UI changes significantly. There is no static screenshot (`docs/screenshots/snapshot.png` is excluded from the VSIX and no longer referenced).
+- **Icon**: `media/icon.png` (Marketplace, 128×128) is rendered from `media/icon-source.svg` via `@resvg/resvg-js` (dev dependency). Edit the SVG, then re-render: `node -e "const{Resvg}=require('@resvg/resvg-js');const fs=require('fs');fs.writeFileSync('media/icon.png',new Resvg(fs.readFileSync('media/icon-source.svg','utf8'),{fitTo:{mode:'width',value:128}}).render().asPng())"`. `icon-source.svg` is excluded from the VSIX via `.vscodeignore`. The activity-bar icon is the separate monochrome `media/mybatis-icon.svg` (uses `currentColor`).
 - Run `npx vsce ls` to verify the VSIX contents — `docs/screenshots/` and other dev-only assets must not appear.
 - Run `npm run build && npm run package` and confirm the `.vsix` is produced without errors.
