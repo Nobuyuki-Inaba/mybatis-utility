@@ -67,9 +67,10 @@ export function updateXmlMapperSql(content: string, queryId: string, newSql: str
 // Java annotation mapper writer
 // ---------------------------------------------------------------------------
 
-// Matches @Select/@Insert/@Update/@Delete with text-block, quoted, or backtick string
+// Matches @Select/@Insert/@Update/@Delete with text-block, quoted, backtick, or string-array
+// (match[5] = string-array form, e.g. @Insert({"line1", "line2"})) — must mirror queryParser.ts
 const JAVA_ANNOTATION_RE =
-  /@(Select|Insert|Update|Delete)\s*\(\s*(?:"""([\s\S]*?)"""|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`)\s*\)/gs;
+  /@(Select|Insert|Update|Delete)\s*\(\s*(?:"""([\s\S]*?)"""|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|(\{(?:\s*"(?:[^"\\]|\\.)*"\s*,?\s*)*\}))\s*\)/gs;
 
 const JAVA_METHOD_RE = /(?:void|[\w<>[\],\s]+)\s+(\w+)\s*\(/;
 
@@ -89,9 +90,21 @@ export function updateJavaAnnotationSql(content: string, methodId: string, newSq
 
     const kind = match[1]; // Select | Insert | Update | Delete
     const isTextBlock = match[2] !== undefined;
+    const isStringArray = match[5] !== undefined;
     let newAnnotation: string;
 
-    if (isTextBlock) {
+    if (isStringArray) {
+      // Preserve string-array format (common on Java <15, where text blocks aren't available).
+      // Rewrite as one quoted string per line, indented one level deeper than the annotation.
+      const lineStart = content.lastIndexOf('\n', match.index) + 1;
+      const annotIndent = content.slice(lineStart, match.index).match(/^(\s*)/)?.[1] ?? '    ';
+      const itemIndent = annotIndent + '    ';
+      const escapedLines = newSql.trim().split('\n').map(line => {
+        const escaped = line.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        return `${itemIndent}"${escaped}"`;
+      });
+      newAnnotation = `@${kind}({\n${escapedLines.join(',\n')}\n${annotIndent}})`;
+    } else if (isTextBlock) {
       // Preserve text-block format; detect existing content indent from the body
       const textBlockBody = match[2];
       const closingWsMatch = textBlockBody.match(/\n(\s*)$/);

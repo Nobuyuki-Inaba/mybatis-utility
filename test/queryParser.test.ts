@@ -282,6 +282,65 @@ describe('parseJavaMapper', () => {
     const results = parseJavaMapper(content);
     expect(results[0].id).toBe('query_1');
   });
+
+  test('string array notation — @Insert with SELECT-INSERT', () => {
+    const content = `
+      @Mapper
+      public interface OrderMapper {
+        @Insert({
+            "INSERT INTO orders_history (id, amount, user_id)",
+            "SELECT id, amount, user_id",
+            "FROM orders",
+            "WHERE created_date < #{cutoffDate}"
+        })
+        int archiveOrders(@Param("cutoffDate") String cutoffDate);
+      }
+    `;
+    const results = parseJavaMapper(content);
+    expect(results).toHaveLength(1);
+    expect(results[0].kind).toBe('insert');
+    expect(results[0].id).toBe('archiveOrders');
+    expect(results[0].sql).toContain('INSERT INTO orders_history');
+    expect(results[0].sql).toContain('SELECT id, amount, user_id');
+    expect(results[0].sql).toContain('FROM orders');
+    expect(results[0].params).toEqual(['cutoffDate']);
+  });
+
+  test('string array notation — @Select with multiple lines', () => {
+    const content = `
+      @Select({
+          "SELECT id, name, email",
+          "FROM users",
+          "WHERE id = #{id}"
+      })
+      User findById(@Param("id") Long id);
+    `;
+    const results = parseJavaMapper(content);
+    expect(results).toHaveLength(1);
+    expect(results[0].kind).toBe('select');
+    expect(results[0].sql).toContain('SELECT id, name, email');
+    expect(results[0].sql).toContain('FROM users');
+    expect(results[0].params).toEqual(['id']);
+  });
+
+  test('string array notation — <script> wrapper for dynamic SQL', () => {
+    const content = `
+      @Select({
+          "<script>",
+          "SELECT * FROM users",
+          "<where>",
+          "<if test=\\"name != null\\">AND name = #{name}</if>",
+          "</where>",
+          "</script>"
+      })
+      List<User> findByName(@Param("name") String name);
+    `;
+    const results = parseJavaMapper(content);
+    expect(results).toHaveLength(1);
+    expect(results[0].sql).not.toContain('<script>');
+    expect(results[0].sql).toContain('SELECT * FROM users');
+    expect(results[0].params).toContain('name');
+  });
 });
 
 // ---------------------------------------------------------------------------

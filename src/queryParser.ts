@@ -159,9 +159,9 @@ function extractAllParams(sql: string): string[] {
 // Java mapper parser
 // ---------------------------------------------------------------------------
 
-// match[1]=kind  match[2]=text-block  match[3]=double-quoted  match[4]=backtick
+// match[1]=kind  match[2]=text-block  match[3]=double-quoted  match[4]=backtick  match[5]=string-array
 const JAVA_ANNOTATION_RE =
-  /@(Select|Insert|Update|Delete)\s*\(\s*(?:"""([\s\S]*?)"""|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`)\s*\)/gs;
+  /@(Select|Insert|Update|Delete)\s*\(\s*(?:"""([\s\S]*?)"""|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|(\{(?:\s*"(?:[^"\\]|\\.)*"\s*,?\s*)*\}))\s*\)/gs;
 
 const JAVA_METHOD_RE = /(?:void|[\w<>[\],\s]+)\s+(\w+)\s*\(/g;
 
@@ -175,7 +175,17 @@ export function parseJavaMapper(content: string): ParsedQuery[] {
   while ((match = JAVA_ANNOTATION_RE.exec(content)) !== null) {
     const kind = match[1].toLowerCase() as QueryKind;
     // match[2] = text block content (Java 15+), match[3] = quoted string, match[4] = backtick
-    const raw = match[2] ?? match[3] ?? match[4];
+    // match[5] = string array {"line1", "line2", ...} joined with newlines
+    let raw: string;
+    if (match[5] !== undefined) {
+      const strings: string[] = [];
+      const strRe = /"((?:[^"\\]|\\.)*)"/g;
+      let sm: RegExpExecArray | null;
+      while ((sm = strRe.exec(match[5])) !== null) { strings.push(sm[1]); }
+      raw = strings.join('\n');
+    } else {
+      raw = match[2] ?? match[3] ?? match[4] ?? '';
+    }
     let sql = raw.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\\\/g, '\\').trim();
     // Strip <script> wrapper used for dynamic SQL in Java annotations
     const scriptMatch = /^<script>([\s\S]*)<\/script>$/i.exec(sql);
