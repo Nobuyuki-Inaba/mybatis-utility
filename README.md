@@ -25,10 +25,10 @@ See [Getting Started](#getting-started) below for detailed instructions on each 
 ## Features
 
 - **Dynamic SQL support** — MyBatis dynamic SQL tags (`<if>`, `<foreach>`, `<where>`, `<set>`, `<trim>`, `<choose>/<when>/<otherwise>`, `<bind>`, `<script>`) are evaluated at execute and preview time using the parameter values you provide. `test="…"` conditions use a built-in OGNL expression evaluator. Parameters referenced only in `test` attributes (e.g. `title` in `<if test="title != null">`) are automatically added to the parameter table. `<foreach>` loop variables (`item`, `index`) are excluded from the table — enter comma-separated values in the collection parameter instead
-- **Mapper panel** — Scans Java (`@Mapper`) and XML mapper files, lists every query by name and type. Supports inline SQL annotations (including Java 15+ **text blocks** `"""..."""`) and XML-mapped interfaces. Results stream in folder-by-folder so the panel populates progressively on large projects. Scan results are cached — switching to another panel and back reuses the result instantly without rescanning. MyBatis Generator `@SelectProvider` / `@InsertProvider` etc. are automatically skipped (no inline SQL to browse)
+- **Mapper panel** — Scans Java (`@Mapper`) and XML mapper files, lists every query by name and type. Supports inline SQL annotations — single-line strings, Java 15+ **text blocks** `"""..."""`, and **string arrays** `{"...", "..."}` (common for multi-line SQL on Java <15) — and XML-mapped interfaces. Results stream in folder-by-folder so the panel populates progressively on large projects. Scan results are cached — switching to another panel and back reuses the result instantly without rescanning. MyBatis Generator `@SelectProvider` / `@InsertProvider` etc. are automatically skipped (no inline SQL to browse)
 - **SQL Files panel** — New panel that lists every `.sql` file in the workspace. Click any file to open it in the Query panel and execute against a configured database. Panel refreshes automatically when `.sql` files are created or deleted
 - **Query panel** — Click a query to open it, edit SQL inline with **syntax highlighting**, fill typed parameters (`#{param}`), and execute. New `#{param}` placeholders added during editing are detected automatically and appended to the parameter table
-- **Write SQL back to mapper** — Click **Preview write-back** to open a diff view (original file vs edited SQL); click **Write back to mapper** to save directly. Supports XML mapper bodies and Java `@Select`/`@Insert`/`@Update`/`@Delete` annotations (single-line and text blocks). Disabled for SQL files (edit them in the built-in editor instead)
+- **Write SQL back to mapper** — Click **Preview write-back** to open a diff view (original file vs edited SQL); click **Write back to mapper** to save directly. Supports XML mapper bodies and Java `@Select`/`@Insert`/`@Update`/`@Delete` annotations (single-line, text blocks, and string arrays — each format is preserved on write-back). Disabled for SQL files (edit them in the built-in editor instead)
 - **reset SQL reloads from disk** — **reset SQL** re-reads the source file (XML, Java, or `.sql`) so external edits made with other tools are always visible without manually refreshing
 - **Live SQL preview** — Click **Preview SQL** to see the final SQL with all parameters substituted inline, before executing
 - **Explain plan** — Click **Explain** to run `EXPLAIN` on the current SQL and inspect the query plan
@@ -165,7 +165,7 @@ Open settings with the **gear icon** (⚙) in the Mappers panel title bar.
 
 ## Supported Mapper Formats
 
-### Java — annotation-based (single-line or text block)
+### Java — annotation-based (single-line, text block, or string array)
 
 ```java
 @Mapper
@@ -179,8 +179,19 @@ public interface UserMapper {
         WHERE name = #{name}
         """)
     List<User> findByName(String name);
+
+    // Multi-line string array (common on Java <15, e.g. SELECT-INSERT statements)
+    @Insert({
+        "INSERT INTO orders_history (id, amount, user_id)",
+        "SELECT id, amount, user_id",
+        "FROM orders",
+        "WHERE created_date < #{cutoffDate}"
+    })
+    int archiveOrders(String cutoffDate);
 }
 ```
+
+Write-back preserves whichever format the original annotation used — editing SQL from a string-array annotation and saving keeps it as a string array rather than converting it to a text block.
 
 ### Java — XML-mapped interface (`@Mapper` only, no inline SQL)
 

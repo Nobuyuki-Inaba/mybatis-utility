@@ -41,7 +41,7 @@ src/
   sheetReader.ts            # SheetReader interface + CsvReader + XlsxReader + getSheetReader() registry; registerSheetReader() for new formats
   queryParser.ts            # extract #{} placeholders, buildExecutableSql(), formatValue(), detectSqlKind(); extractDynamicParams() finds OGNL-only refs (test/collection attrs); extractForeachLoopVars() excludes item/index loop vars from params table
   dynamicSqlTransformer.ts  # transformDynamicSql() — evaluates MyBatis dynamic SQL tags against ParamEntry values; built-in OGNL recursive-descent evaluator (no eval/Function); handles <script>, <if>, <where>, <set>, <trim>, <foreach>, <choose>/<when>/<otherwise>, <bind>, CDATA
-  mapperWriter.ts           # write SQL back to mapper files: updateXmlMapperSql(), updateJavaAnnotationSql()
+  mapperWriter.ts           # write SQL back to mapper files: updateXmlMapperSql(), updateJavaAnnotationSql(); has its own JAVA_ANNOTATION_RE copy (must mirror queryParser.ts's supported formats — single-line, text block, string-array) since it needs to locate + regenerate the annotation source text, not just extract SQL; string-array annotations are rewritten as string arrays (not converted to text blocks, since those require Java 15+)
   sqlFileProvider.ts        # WebviewViewProvider — SQL Files panel; scans **/*.sql via workspace.findFiles
   queryPanel.ts             # WebviewPanel for query execution (singleton); handles execute/explain/preview/write-back/reload
   configPanel.ts            # WebviewPanel for DB connection management (singleton)
@@ -52,7 +52,7 @@ src/
   datasetLoaderPanel.ts     # WebviewPanel for bulk-loading; _sendInit() reads XLSX sheet names via getSheetReader().listSheets() before sending init to webview
   datasetLoader.ts          # readSheetData() delegates to getSheetReader(); loadSheetToDb() via dbManager.bulkLoad()
   datasetScanner.ts         # scanDatasetFiles(FolderScanConfig[]) — per-folder include+exclude; xlsx sheet names deferred to DatasetLoaderPanel
-  queryParser.ts            # JAVA_ANNOTATION_RE supports single-quoted strings AND Java 15+ text blocks ("""); parseJavaMapperMethods() handles @Mapper interfaces with no inline SQL; detectSqlKind() infers QueryKind from first DML keyword; <script> wrapper stripped in parseJavaMapper; formatValue() exported for use by dynamicSqlTransformer
+  queryParser.ts            # JAVA_ANNOTATION_RE supports single-quoted strings, Java 15+ text blocks ("""), AND string-array form ({"...", "..."}, common on Java <15 for multi-line SQL — the array's string literals are joined with '\n'); parseJavaMapperMethods() handles @Mapper interfaces with no inline SQL; detectSqlKind() infers QueryKind from first DML keyword; <script> wrapper stripped in parseJavaMapper; formatValue() exported for use by dynamicSqlTransformer
   drivers/
     sqlite.ts               # sql.js (pure WASM, no native build required); implements bulkLoad
     postgresql.ts           # pg (pure JS); implements bulkLoad
@@ -140,7 +140,7 @@ No other changes needed — `readSheetData()`, `DatasetLoaderPanel`, and `getShe
 - `makeGlob()` (in `scanUtils.ts`) strips trailing `/**` / `/*` then emits both `folder/ext` (direct children) and `folder/**/ext` (nested). Handles patterns like `**/mapper/**` and `**/mapper` identically.
 - **Per-folder settings**: `_scan()` iterates `vscode.workspace.workspaceFolders` and calls `getConfiguration('mybatisUtility', folder.uri)` per folder. Include (`scanFolders`) and exclude (`scanExclude`) can differ per folder. All settings have `"scope": "resource"` in `package.json`.
 - **Exclude priority**: `scanExclude` user patterns are appended after `MAPPER_DEFAULT_EXCLUDE` constants. Since VSCode `findFiles` excludes anything matched by the glob, both defaults and user patterns apply equally.
-- `parseJavaMapper()` supports single-quoted strings and Java 15+ text blocks (`"""`). Falls back to `parseJavaMapperMethods()` when no inline SQL is found (XML-mapped or annotation-only interfaces with no SQL yet).
+- `parseJavaMapper()` supports single-quoted strings, Java 15+ text blocks (`"""`), and string-array annotations (`{"line1", "line2"}` — common on Java <15 for multi-line SQL, e.g. SELECT-INSERT statements). Falls back to `parseJavaMapperMethods()` when no inline SQL is found (XML-mapped or annotation-only interfaces with no SQL yet).
 - `parseJavaMapperMethods()` in `queryParser.ts` extracts method signatures from `@Mapper` interfaces; infers `QueryKind` from method-name prefix; extracts `@Param` values as placeholder names.
 - **`@*Provider` skip**: `isProviderMapper()` in `mapperScanner.ts` detects `@SelectProvider` / `@InsertProvider` / `@UpdateProvider` / `@DeleteProvider`. If no inline SQL is found AND the file has Provider annotations, `parseFile()` returns `null` (MyBatis Generator output, no SQL to browse).
 - Excluded by default: `target/`, `build/`, `out/`, `dist/`, `.gradle/`, `src/test/`, `src/test-**/`.
