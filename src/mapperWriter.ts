@@ -67,10 +67,11 @@ export function updateXmlMapperSql(content: string, queryId: string, newSql: str
 // Java annotation mapper writer
 // ---------------------------------------------------------------------------
 
-// Matches @Select/@Insert/@Update/@Delete with text-block, quoted, backtick, or string-array
+// Matches @Select/@Insert/@Update/@Delete with text-block, quoted (incl. "a" + "b"
+// concatenation), backtick, or string-array
 // (match[5] = string-array form, e.g. @Insert({"line1", "line2"})) — must mirror queryParser.ts
 const JAVA_ANNOTATION_RE =
-  /@(Select|Insert|Update|Delete)\s*\(\s*(?:"""([\s\S]*?)"""|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|(\{(?:\s*"(?:[^"\\]|\\.)*"\s*,?\s*)*\}))\s*\)/gs;
+  /@(Select|Insert|Update|Delete)\s*\(\s*(?:"""([\s\S]*?)"""|("(?:[^"\\]|\\.)*"(?:\s*\+\s*"(?:[^"\\]|\\.)*")*)|`((?:[^`\\]|\\.)*)`|(\{(?:\s*"(?:[^"\\]|\\.)*"\s*,?\s*)*\}))\s*\)/gs;
 
 const JAVA_METHOD_RE = /(?:void|[\w<>[\],\s]+)\s+(\w+)\s*\(/;
 
