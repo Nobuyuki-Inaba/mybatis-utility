@@ -95,6 +95,27 @@ describe('updateJavaAnnotationSql', () => {
     expect(updated).toContain('\\"x\\"');
   });
 
+  test('concatenated quoted-string annotation ("a" + "b") is found and rewritten', () => {
+    const content = `
+      @Mapper
+      public interface OrderMapper {
+          @Insert("INSERT INTO orders_history (id, amount, user_id) " +
+                  "SELECT id, amount, user_id " +
+                  "FROM orders " +
+                  "WHERE created_date < #{cutoffDate}")
+          int archiveOrders(@Param("cutoffDate") String cutoffDate);
+      }
+    `;
+    const updated = updateJavaAnnotationSql(
+      content,
+      'archiveOrders',
+      'INSERT INTO orders_history (id, amount, user_id) SELECT id, amount, user_id FROM orders WHERE created_date < #{cutoffDate} AND status = 1'
+    );
+    expect(updated).toContain(
+      '@Insert("INSERT INTO orders_history (id, amount, user_id) SELECT id, amount, user_id FROM orders WHERE created_date < #{cutoffDate} AND status = 1")'
+    );
+  });
+
   test('throws when the method id is not found', () => {
     const content = `
       @Select("SELECT 1")

@@ -323,6 +323,37 @@ describe('parseJavaMapper', () => {
     expect(results[0].params).toEqual(['id']);
   });
 
+  test('string concatenation notation — @Insert with SELECT-INSERT ("a" + "b")', () => {
+    const content = `
+      @Mapper
+      public interface OrderMapper {
+        @Insert("INSERT INTO orders_history (id, amount, user_id) " +
+                "SELECT id, amount, user_id " +
+                "FROM orders " +
+                "WHERE created_date < #{cutoffDate}")
+        int archiveOrders(@Param("cutoffDate") String cutoffDate);
+      }
+    `;
+    const results = parseJavaMapper(content);
+    expect(results).toHaveLength(1);
+    expect(results[0].kind).toBe('insert');
+    expect(results[0].id).toBe('archiveOrders');
+    expect(results[0].sql).toBe(
+      'INSERT INTO orders_history (id, amount, user_id) SELECT id, amount, user_id FROM orders WHERE created_date < #{cutoffDate}'
+    );
+    expect(results[0].params).toEqual(['cutoffDate']);
+  });
+
+  test('single quoted string concatenation still parses as a single string (no "+")', () => {
+    const content = `
+      @Insert("INSERT INTO archive SELECT * FROM orders WHERE id = #{id}")
+      void archive(Long id);
+    `;
+    const results = parseJavaMapper(content);
+    expect(results).toHaveLength(1);
+    expect(results[0].sql).toBe('INSERT INTO archive SELECT * FROM orders WHERE id = #{id}');
+  });
+
   test('string array notation — <script> wrapper for dynamic SQL', () => {
     const content = `
       @Select({
